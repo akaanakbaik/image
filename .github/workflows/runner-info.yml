@@ -1,0 +1,30 @@
+name: Runner Hardware Information
+
+on:
+  workflow_dispatch:
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: CPU and architecture
+        run: |
+          lscpu
+          nproc
+      - name: Memory
+        run: |
+          free -h
+      - name: Storage
+        run: |
+          df -h
+          lsblk
+      - name: Operating system
+        run: |
+          cat /etc/os-release
+          uname -a
+      - name: Docker and Buildx
+        run: |
+          docker version
+          docker buildx version
+          docker info
