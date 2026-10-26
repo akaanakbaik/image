@@ -11,23 +11,39 @@ permissions:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - linux/amd64
+          - linux/arm64
     steps:
       - uses: actions/checkout@v4
-      - name: Build Node.js 22
-        run: docker build --build-arg NODE_VERSION=22 -t nodejs-test:22 .
-      - name: Check runtime and tools
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          platforms: ${{ matrix.platform }}
+          build-args: |
+            NODE_VERSION=22
+          tags: nodejs-test:22
+      - name: Verify runtime
         run: |
           docker run --rm nodejs-test:22 'node --version'
           docker run --rm nodejs-test:22 'npm --version'
           docker run --rm nodejs-test:22 'git --version'
           docker run --rm nodejs-test:22 'python3 --version'
           docker run --rm nodejs-test:22 'gcc --version'
-      - name: Check container identity
+          docker run --rm nodejs-test:22 'test "$(id -u)" = "1000"'
+          docker run --rm nodejs-test:22 'test "$(pwd)" = "/home/container"'
+      - name: Verify startup
         run: |
-          docker run --rm nodejs-test:22 'id'
-          docker run --rm nodejs-test:22 'pwd'
-      - name: Check startup
+          docker run --rm -e STARTUP='node -e "if (process.arch !== \"x64\" && process.arch !== \"arm64\") process.exit(1)"' nodejs-test:22
+      - name: Verify npm installation
         run: |
-          docker run --rm -e STARTUP='node -e "console.log(42)"' nodejs-test:22
+          docker run --rm nodejs-test:22 'mkdir -p /home/container/smoke && cd /home/container/smoke && npm init -y && npm install --ignore-scripts --no-audit --no-fund is-number@7.0.0 && node -e "if (!require(\"is-number\")(42)) process.exit(1)"'
