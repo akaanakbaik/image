@@ -1,5 +1,7 @@
 ARG NODE_VERSION=22
-FROM node:${NODE_VERSION}-bookworm-slim
+ARG NODE_DISTRO=bookworm-slim
+
+FROM node:${NODE_VERSION}-${NODE_DISTRO}
 
 ENV USER=container \
     HOME=/home/container \
