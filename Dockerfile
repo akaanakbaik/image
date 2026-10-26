@@ -22,10 +22,9 @@ RUN apt-get update \
         xz-utils \
         tini \
     && rm -rf /var/lib/apt/lists/* \
-    && groupadd --gid 1000 container \
-    && useradd --uid 1000 --gid 1000 --home-dir /home/container --shell /bin/bash --create-home container \
+    && usermod --login container --home /home/container --move-home node \
     && mkdir -p /home/container \
-    && chown -R container:container /home/container
+    && chown -R container:1000 /home/container
 
 WORKDIR /home/container
 
