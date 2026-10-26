@@ -1,0 +1,30 @@
+name: Check Node.js Base Images
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: docker/setup-buildx-action@v3
+      - name: Inspect Node.js 18-26
+        shell: bash
+        run: |
+          for version in {18..26}; do
+            echo "=== Node.js ${version} ==="
+            if docker buildx imagetools inspect "docker.io/library/node:${version}-bookworm-slim" > /tmp/node-manifest.txt 2>&1; then
+              amd64=$(grep -c 'Platform:.*linux/amd64' /tmp/node-manifest.txt || true)
+              arm64=$(grep -c 'Platform:.*linux/arm64' /tmp/node-manifest.txt || true)
+              echo "Available: yes"
+              echo "AMD64: ${amd64}"
+              echo "ARM64: ${arm64}"
+            else
+              echo "Available: no"
+              tail -n 3 /tmp/node-manifest.txt
+            fi
+          done
