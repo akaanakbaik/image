@@ -16,9 +16,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform:
-          - linux/amd64
-          - linux/arm64
+        include:
+          - platform: linux/amd64
+            arch: x64
+          - platform: linux/arm64
+            arch: arm64
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-qemu-action@v3
@@ -34,16 +36,17 @@ jobs:
           tags: nodejs-test:22
       - name: Verify runtime
         run: |
-          docker run --rm nodejs-test:22 'node --version'
-          docker run --rm nodejs-test:22 'npm --version'
-          docker run --rm nodejs-test:22 'git --version'
-          docker run --rm nodejs-test:22 'python3 --version'
-          docker run --rm nodejs-test:22 'gcc --version'
-          docker run --rm nodejs-test:22 'test "$(id -u)" = "1000"'
-          docker run --rm nodejs-test:22 'test "$(pwd)" = "/home/container"'
-      - name: Verify startup
+          docker run --rm --platform '${{ matrix.platform }}' nodejs-test:22 'node --version'
+          docker run --rm --platform '${{ matrix.platform }}' nodejs-test:22 'npm --version'
+          docker run --rm --platform '${{ matrix.platform }}' nodejs-test:22 'git --version'
+          docker run --rm --platform '${{ matrix.platform }}' nodejs-test:22 'python3 --version'
+          docker run --rm --platform '${{ matrix.platform }}' nodejs-test:22 'gcc --version'
+          docker run --rm --platform '${{ matrix.platform }}' nodejs-test:22 'test "$(id -u)" = "1000"'
+          docker run --rm --platform '${{ matrix.platform }}' nodejs-test:22 'test "$(pwd)" = "/home/container"'
+      - name: Verify startup and architecture
         run: |
-          docker run --rm -e STARTUP='node -e "if (process.arch !== \"x64\" && process.arch !== \"arm64\") process.exit(1)"' nodejs-test:22
+          result=$(docker run --rm --platform '${{ matrix.platform }}' -e STARTUP='node -p process.arch' nodejs-test:22)
+          test "$result" = '${{ matrix.arch }}'
       - name: Verify npm installation
         run: |
-          docker run --rm nodejs-test:22 'mkdir -p /home/container/smoke && cd /home/container/smoke && npm init -y && npm install --ignore-scripts --no-audit --no-fund is-number@7.0.0 && node -e "if (!require(\"is-number\")(42)) process.exit(1)"'
+          docker run --rm --platform '${{ matrix.platform }}' nodejs-test:22 'mkdir -p /home/container/smoke && cd /home/container/smoke && npm init -y && npm install --ignore-scripts --no-audit --no-fund is-number@7.0.0 && node -p require.resolve\(\"is-number\"\)'
