@@ -1,0 +1,27 @@
+name: Check Node.js 19 Alternatives
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: docker/setup-buildx-action@v3
+      - name: Inspect Node.js 19 tags
+        shell: bash
+        run: |
+          for tag in 19 19-slim 19-bullseye 19-bullseye-slim 19-alpine 19.9.0-bullseye-slim; do
+            echo "=== node:${tag} ==="
+            if docker buildx imagetools inspect "docker.io/library/node:${tag}" > /tmp/node19-manifest.txt 2>&1; then
+              echo "Available: yes"
+              grep 'Platform:' /tmp/node19-manifest.txt | grep -E 'linux/amd64|linux/arm64' || true
+            else
+              echo "Available: no"
+              tail -n 2 /tmp/node19-manifest.txt
+            fi
+          done
