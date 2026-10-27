@@ -8,7 +8,8 @@ ENV USER=container \
     LANG=C.UTF-8 \
     DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update \
+RUN rm -rf /var/lib/apt/lists/* \
+    && apt-get update \
     && apt-get install -y --no-install-recommends \
         bash \
         ca-certificates \
