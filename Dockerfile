@@ -8,7 +8,13 @@ ENV USER=container \
     LANG=C.UTF-8 \
     DEBIAN_FRONTEND=noninteractive
 
-RUN rm -rf /var/lib/apt/lists/* \
+RUN if [ "$NODE_VERSION" = "19" ]; then \
+        printf '%s\n' \
+          'deb [check-valid-until=no] http://archive.debian.org/debian bullseye main' \
+          'deb [check-valid-until=no] http://archive.debian.org/debian-security bullseye-security main' \
+          > /etc/apt/sources.list; \
+    fi \
+    && rm -rf /var/lib/apt/lists/* \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
         bash \
