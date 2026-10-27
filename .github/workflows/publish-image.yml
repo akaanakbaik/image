@@ -31,7 +31,17 @@ jobs:
           test "${GITHUB_REF_NAME}" = "master"
           result=$(gh api \
             "repos/${REPOSITORY}/actions/workflows/test-image.yml/runs?head_sha=${COMMIT_SHA}&per_page=30" \
-            --jq '[.workflow_runs[] | select(.head_sha == env.COMMIT_SHA and .conclusion == "success")] | length')
+            | jq --arg sha "$COMMIT_SHA" '
+              [.workflow_runs[] |
+                select(
+                  .head_sha == $sha
+                  and .head_branch == "master"
+                  and .event == "push"
+                  and .status == "completed"
+                  and .conclusion == "success"
+                )
+              ] | length
+            ')
           test "$result" -ge 1
           echo "Verified successful test workflow for ${COMMIT_SHA}"
 
@@ -89,6 +99,24 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Resolve locked Node.js base
+        id: base
+        shell: bash
+        env:
+          NODE_MAJOR: ${{ matrix.node }}
+        run: |
+          python3 - <<'PYSELECT'
+          import json
+          import os
+          from pathlib import Path
+
+          data = json.loads(Path("node-versions.json").read_text())
+          entry = data[os.environ["NODE_MAJOR"]]
+
+          with open(os.environ["GITHUB_OUTPUT"], "a") as output:
+              for key in ("version", "distro", "digest", "lifecycle"):
+                  print(f"{key}={entry[key]}", file=output)
+          PYSELECT
       - name: Build and publish
         uses: docker/build-push-action@v6
         with:
@@ -97,14 +125,16 @@ jobs:
           pull: true
           platforms: linux/amd64,linux/arm64
           build-args: |
-            NODE_VERSION=${{ matrix.node }}
-            NODE_DISTRO=${{ matrix.distro }}
+            NODE_VERSION=${{ steps.base.outputs.version }}
+            NODE_DIGEST=${{ steps.base.outputs.digest }}
+            NODE_DISTRO=${{ steps.base.outputs.distro }}
           tags: ghcr.io/${{ github.repository }}:nodejs_${{ matrix.node }}
           labels: |
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.title=Pterodactyl Node.js ${{ matrix.node }}
             dev.akaa.node.major=${{ matrix.node }}
-            dev.akaa.node.lifecycle=${{ matrix.lifecycle }}
+            dev.akaa.node.lifecycle=${{ steps.base.outputs.lifecycle }}
+            dev.akaa.node.version=${{ steps.base.outputs.version }}
           provenance: true
           sbom: true

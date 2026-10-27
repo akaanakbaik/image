@@ -23,15 +23,24 @@ jobs:
       - uses: actions/checkout@v4
       - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
-      - name: Select base distribution
+      - name: Resolve locked Node.js base
         id: base
         shell: bash
+        env:
+          NODE_MAJOR: ${{ matrix.node }}
         run: |
-          if [ '${{ matrix.node }}' = '19' ]; then
-            echo 'distro=bullseye-slim' >> "$GITHUB_OUTPUT"
-          else
-            echo 'distro=bookworm-slim' >> "$GITHUB_OUTPUT"
-          fi
+          python3 - <<'PYSELECT'
+          import json
+          import os
+          from pathlib import Path
+
+          data = json.loads(Path("node-versions.json").read_text())
+          entry = data[os.environ["NODE_MAJOR"]]
+
+          with open(os.environ["GITHUB_OUTPUT"], "a") as output:
+              for key in ("version", "distro", "digest", "lifecycle"):
+                  print(f"{key}={entry[key]}", file=output)
+          PYSELECT
       - name: Build image
         uses: docker/build-push-action@v6
         with:
@@ -39,7 +48,8 @@ jobs:
           load: true
           platforms: linux/${{ matrix.platform }}
           build-args: |
-            NODE_VERSION=${{ matrix.node }}
+            NODE_VERSION=${{ steps.base.outputs.version }}
+            NODE_DIGEST=${{ steps.base.outputs.digest }}
             NODE_DISTRO=${{ steps.base.outputs.distro }}
           tags: nodejs-test:${{ matrix.node }}
       - name: Verify runtime and architecture
@@ -47,9 +57,9 @@ jobs:
         run: |
           platform='linux/${{ matrix.platform }}'
           image='nodejs-test:${{ matrix.node }}'
-          expected='${{ matrix.node }}'
+          expected='${{ steps.base.outputs.version }}'
           version=$(docker run --rm --platform "$platform" "$image" 'node -p process.versions.node')
-          test "${version%%.*}" = "$expected"
+          test "$version" = "$expected"
           arch=$(docker run --rm --platform "$platform" -e STARTUP='node -p process.arch' "$image")
           if [ '${{ matrix.platform }}' = 'amd64' ]; then
             test "$arch" = 'x64'
