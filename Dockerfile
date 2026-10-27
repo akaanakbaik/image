@@ -8,12 +8,14 @@ ENV USER=container \
     LANG=C.UTF-8 \
     DEBIAN_FRONTEND=noninteractive
 
-RUN if [ "$NODE_VERSION" = "19" ]; then \
-        printf '%s\n' \
-          'deb [check-valid-until=no] http://archive.debian.org/debian bullseye main' \
-          'deb [check-valid-until=no] http://archive.debian.org/debian-security bullseye-security main' \
-          > /etc/apt/sources.list; \
-    fi \
+RUN case "$NODE_VERSION" in \
+        19|19.*) \
+          printf '%s\n' \
+            'deb [check-valid-until=no] http://archive.debian.org/debian bullseye main' \
+            'deb [check-valid-until=no] http://archive.debian.org/debian-security bullseye-security main' \
+            > /etc/apt/sources.list \
+          ;; \
+    esac \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
