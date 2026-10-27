@@ -1,0 +1,56 @@
+{
+  "18": {
+    "version": "18.20.8",
+    "distro": "bookworm-slim",
+    "digest": "sha256:f9ab18e354e6855ae56ef2b290dd225c1e51a564f87584b9bd21dd651838830e",
+    "lifecycle": "legacy-insecure"
+  },
+  "19": {
+    "version": "19.9.0",
+    "distro": "bullseye-slim",
+    "digest": "sha256:f58f1fcf5c9ff9e3752993edb4ed6dbd35697124c85a43f3b97aa054500b0534",
+    "lifecycle": "legacy-insecure"
+  },
+  "20": {
+    "version": "20.20.2",
+    "distro": "bookworm-slim",
+    "digest": "sha256:2cf067cfed83d5ea958367df9f966191a942351a2df77d6f0193e162b5febfc0",
+    "lifecycle": "legacy-insecure"
+  },
+  "21": {
+    "version": "21.7.3",
+    "distro": "bookworm-slim",
+    "digest": "sha256:dfc05dee209a1d7adf2ef189bd97396daad4e97c6eaa85778d6f75205ba1b0fb",
+    "lifecycle": "legacy-insecure"
+  },
+  "22": {
+    "version": "22.23.4",
+    "distro": "bookworm-slim",
+    "digest": "sha256:de170b39439eb0e5a3444ad7d60b015614a381e10fecae2e30ec9e735122f38d",
+    "lifecycle": "supported"
+  },
+  "23": {
+    "version": "23.11.1",
+    "distro": "bookworm-slim",
+    "digest": "sha256:86191b94d2a163be41f3dc7fe5e5fcaca8ba2f1be7275d98a06343483c17414a",
+    "lifecycle": "legacy-insecure"
+  },
+  "24": {
+    "version": "24.22.1",
+    "distro": "bookworm-slim",
+    "digest": "sha256:55fb5f5a527ea2c5c4a95f963e48ef90aa38c7b346054fdc8ee9957a2b55d205",
+    "lifecycle": "supported"
+  },
+  "25": {
+    "version": "25.9.0",
+    "distro": "bookworm-slim",
+    "digest": "sha256:81db02c4b671288a03915da9534dbd54f96d0e7c24d80ccc54f5b36b2e684370",
+    "lifecycle": "legacy-insecure"
+  },
+  "26": {
+    "version": "26.12.1",
+    "distro": "bookworm-slim",
+    "digest": "sha256:28147155d47dc31abe0a46e0d12b59b2fb3d0a2dcc5dc65fce76a074180b16fe",
+    "lifecycle": "current"
+  }
+}
